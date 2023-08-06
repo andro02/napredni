@@ -43,6 +43,7 @@ func main() {
 	case commands[0]:
 		{
 			fmt.Println("PUT code")
+			src.put()
 		}
 	case commands[1]:
 		{
