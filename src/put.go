@@ -2,6 +2,6 @@ package src
 
 import "fmt"
 
-func put() {
+func Put() {
 	fmt.Println("I just got executed!")
 }

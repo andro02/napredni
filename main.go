@@ -6,6 +6,8 @@ import (
 	"log"
 	"os"
 	"strings"
+
+	"github.com/andro02/napredni/src"
 )
 
 func main() {
@@ -43,7 +45,7 @@ func main() {
 	case commands[0]:
 		{
 			fmt.Println("PUT code")
-			src.put()
+			src.Put()
 		}
 	case commands[1]:
 		{
