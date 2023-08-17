@@ -13,13 +13,20 @@ func NewBTree() *BTree {
 
 	bTree := BTree{
 		Root:  NewBTreeNode(true),
-		Limit: 50,
+		Limit: 3,
 	}
 	return &bTree
 
 }
 
 func (bTree *BTree) Insert(key int, value []byte) {
+
+	_, found := bTree.SearchKey(key, bTree.Root)
+
+	if found != -1 {
+		fmt.Println("Key already exists. Error.")
+		return
+	}
 
 	k := NewKeyValuePair(key, value)
 	root := bTree.Root
@@ -130,16 +137,17 @@ func (bTree *BTree) SearchKey(key int, x *BTreeNode) (*BTreeNode, int) {
 
 // 	B := NewBTree()
 
-// 	for i := 0; i < 10000000; i++ {
-// 		B.Insert(i, []byte("vrednost"))
-// 		//B.PrintTree(B.Root, 0)
+// 	for i := 0; i < 20; i++ {
+// 		B.Insert(1, []byte("vrednost"))
+// 		B.PrintTree(B.Root, 0)
+// 		fmt.Println("-----------")
 // 	}
-// 	for i := 0; i < 10000000; i++ {
-// 		_, index := B.SearchKey(-1, B.Root)
+// 	for i := 0; i < 10; i++ {
+// 		//_, index := B.SearchKey(-1, B.Root)
 // 		//fmt.Println(node, index)
-// 		if index == -1 {
-// 			fmt.Print("greska")
-// 		}
+// 		// if index == -1 {
+// 		// 	fmt.Print("greska")
+// 		// }
 // 		//B.PrintTree(B.Root, 0)
 // 	}
 
