@@ -49,7 +49,7 @@ func (bTree *BTree) InsertNonFull(x *BTreeNode, k *KeyValuePair) {
 
 	i := len(x.Data) - 1
 
-	if x.Leaf == true {
+	if x.Leaf {
 
 		x.Data = append(x.Data, nil)
 		for i >= 0 && k.Key < x.Data[i].Key {
@@ -94,7 +94,7 @@ func (bTree *BTree) SplitChild(x *BTreeNode, index int) {
 
 	z.Data = y.Data[bTree.Limit : 2*bTree.Limit-1]
 	y.Data = y.Data[0 : bTree.Limit-1]
-	if y.Leaf == false {
+	if !y.Leaf {
 		z.Child = y.Child[bTree.Limit : 2*bTree.Limit]
 		y.Child = y.Child[0:bTree.Limit]
 	}
@@ -125,7 +125,7 @@ func (bTree *BTree) SearchKey(key int, x *BTreeNode) (*BTreeNode, int) {
 	}
 	if i < len(x.Data) && key == x.Data[i].Key {
 		return x, i
-	} else if x.Leaf == true {
+	} else if x.Leaf {
 		return nil, -1
 	} else {
 		return bTree.SearchKey(key, x.Child[i])
