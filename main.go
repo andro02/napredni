@@ -12,6 +12,8 @@ import (
 
 func main() {
 
+	src.Test()
+
 	wal := src.NewWal()
 
 	reader := bufio.NewReader(os.Stdin)
