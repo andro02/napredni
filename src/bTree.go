@@ -2,6 +2,7 @@ package src
 
 import (
 	"fmt"
+	"strconv"
 )
 
 type BTree struct {
@@ -19,7 +20,7 @@ func NewBTree() *BTree {
 
 }
 
-func (bTree *BTree) Insert(key int, value []byte) {
+func (bTree *BTree) Insert(key string, value []byte) {
 
 	_, found := bTree.SearchKey(key, bTree.Root)
 
@@ -51,7 +52,9 @@ func (bTree *BTree) InsertNonFull(x *BTreeNode, k *KeyValuePair) {
 
 	if x.Leaf {
 
-		x.Data = append(x.Data, nil)
+		oldData := x.Data
+		x.Data = make([]*KeyValuePair, len(oldData)+1)
+		copy(x.Data, oldData)
 		for i >= 0 && k.Key < x.Data[i].Key {
 			x.Data[i+1] = x.Data[i]
 			i -= 1
@@ -71,6 +74,9 @@ func (bTree *BTree) InsertNonFull(x *BTreeNode, k *KeyValuePair) {
 				i += 1
 			}
 		}
+		if k.Key == strconv.Itoa(11) {
+			fmt.Print()
+		}
 		bTree.InsertNonFull(x.Child[i], k)
 
 	}
@@ -82,13 +88,19 @@ func (bTree *BTree) SplitChild(x *BTreeNode, index int) {
 	y := x.Child[index]
 	z := NewBTreeNode(y.Leaf)
 
-	if len(x.Child) <= index+1 {
-		x.Child = append(x.Child, nil)
+	oldChild := x.Child
+	x.Child = make([]*BTreeNode, len(oldChild)+1)
+	copy(x.Child, oldChild)
+	for i := len(x.Child) - 1; i > index+1; i-- {
+		x.Child[i] = x.Child[i-1]
 	}
 	x.Child[index+1] = z
 
-	if len(x.Data) <= index {
-		x.Data = append(x.Data, nil)
+	oldData := x.Data
+	x.Data = make([]*KeyValuePair, len(oldData)+1)
+	copy(x.Data, oldData)
+	for i := len(x.Data) - 1; i > index; i-- {
+		x.Data[i] = x.Data[i-1]
 	}
 	x.Data[index] = y.Data[bTree.Limit-1]
 
@@ -117,7 +129,7 @@ func (bTree *BTree) PrintTree(x *BTreeNode, l int) {
 
 }
 
-func (bTree *BTree) SearchKey(key int, x *BTreeNode) (*BTreeNode, int) {
+func (bTree *BTree) SearchKey(key string, x *BTreeNode) (*BTreeNode, int) {
 
 	i := 0
 	for i < len(x.Data) && key > x.Data[i].Key {
@@ -133,22 +145,49 @@ func (bTree *BTree) SearchKey(key int, x *BTreeNode) (*BTreeNode, int) {
 
 }
 
+func (bTree *BTree) GetAllElements(node *BTreeNode) {
+
+	for i := 0; i < len(node.Child); i++ {
+		bTree.GetAllElements(node.Child[i])
+		if i != len(node.Child)-1 {
+			fmt.Print(node.Data[i].Key, ", ")
+		}
+	}
+	if len(node.Child) == 0 {
+		for i := 0; i < len(node.Data); i++ {
+			fmt.Print(node.Data[i].Key, ", ")
+		}
+	}
+
+}
+
 // func Test() {
 
 // 	B := NewBTree()
+// 	size := 1000000
 
-// 	for i := 0; i < 20; i++ {
-// 		B.Insert(1, []byte("vrednost"))
-// 		B.PrintTree(B.Root, 0)
-// 		fmt.Println("-----------")
+// 	for i := 0; i < size; i++ {
+// 		B.Insert(strconv.Itoa(i), []byte("vrednost"))
+// 		//B.Insert(i, []byte("vrednost"))
+// 		//B.PrintTree(B.Root, 0)
+// 		//fmt.Println("-----------")
 // 	}
-// 	for i := 0; i < 10; i++ {
-// 		//_, index := B.SearchKey(-1, B.Root)
+// 	//B.PrintTree(B.Root, 0)
+// 	//B.GetAllElements(B.Root)
+// 	greske := 0
+// 	dobri := 0
+// 	for i := 0; i < size; i++ {
+// 		_, index := B.SearchKey(strconv.Itoa(i), B.Root)
+// 		//_, index := B.SearchKey(i, B.Root)
 // 		//fmt.Println(node, index)
-// 		// if index == -1 {
-// 		// 	fmt.Print("greska")
-// 		// }
+// 		if index == -1 {
+// 			greske++
+// 			fmt.Println(i)
+// 		} else {
+// 			dobri++
+// 		}
 // 		//B.PrintTree(B.Root, 0)
 // 	}
+// 	fmt.Println("greske: ", greske, ", dobri: ", dobri)
 
 // }
