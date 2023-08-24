@@ -12,7 +12,7 @@ import (
 
 func main() {
 
-	src.Test()
+	
 
 	wal := src.NewWal()
 
