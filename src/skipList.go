@@ -129,6 +129,16 @@ func (s *SkipList) Display() {
 	}
 
 }
+
+func (s *SkipList) GetAll() []SkipListNode {
+	node := s.Head.next[0]
+	list := make([]SkipListNode, 0, s.size)
+	for node != nil {
+		list = append(list, *node)
+		node = node.next[0]
+	}
+	return list
+}
 func Test() {
 	S := NewSkipList(3)
 	S.InsertElement("3", []byte("asda"))
