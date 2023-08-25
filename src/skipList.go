@@ -9,7 +9,6 @@ import (
 type SkipList struct {
 	maxHeight int
 	height    int
-	size      int
 	Head      *SkipListNode
 	rand      *rand.Rand
 }
@@ -19,7 +18,6 @@ func NewSkipList(maxHeight int) *SkipList {
 	skipList := SkipList{
 		maxHeight: maxHeight,
 		height:    0,
-		size:      0,
 		Head:      NewSkipListNode("-inf", []byte("-1"), maxHeight),
 		rand:      rand.New(source),
 	}
@@ -132,7 +130,7 @@ func (s *SkipList) Display() {
 
 func (s *SkipList) GetAll() []SkipListNode {
 	node := s.Head.next[0]
-	list := make([]SkipListNode, 0, s.size)
+	list := make([]SkipListNode, 0)
 	for node != nil {
 		list = append(list, *node)
 		node = node.next[0]
