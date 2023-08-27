@@ -15,6 +15,7 @@ func main() {
 	
 
 	wal := src.NewWal()
+	bTree := src.NewBTree()
 
 	reader := bufio.NewReader(os.Stdin)
 	var commands = [5]string{"PUT", "GET", "DELETE", "LIST", "RANGESCAN"}
@@ -49,7 +50,7 @@ func main() {
 		case commands[0]:
 			{
 				fmt.Println("PUT code")
-				src.Put(wal, tokens)
+				src.Put(wal, bTree, tokens)
 			}
 		case commands[1]:
 			{

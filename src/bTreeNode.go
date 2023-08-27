@@ -1,11 +1,11 @@
 package src
 
 type KeyValuePair struct {
-	Key   int
+	Key   string
 	Value []byte
 }
 
-func NewKeyValuePair(key int, value []byte) *KeyValuePair {
+func NewKeyValuePair(key string, value []byte) *KeyValuePair {
 
 	keyValuePair := KeyValuePair{
 		Key:   key,
