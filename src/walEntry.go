@@ -3,6 +3,7 @@ package src
 import (
 	"encoding/binary"
 	"hash/crc32"
+	"os"
 	"time"
 )
 
@@ -99,5 +100,76 @@ func (walEntry *WalEntry) ToBytes() []byte {
 	bytes = append(bytes, walEntry.Value...)
 
 	return bytes
+
+}
+
+func WalEntryFromBytes(bytes []byte) *WalEntry {
+
+	walEntry := NewWalEntry()
+	walEntry.Crc = binary.LittleEndian.Uint32(bytes[:4])
+	walEntry.Timestamp = binary.LittleEndian.Uint64(bytes[4:12])
+	walEntry.Tombstone = bytes[12]
+	walEntry.KeySize = binary.LittleEndian.Uint64(bytes[13:21])
+	walEntry.ValueSize = binary.LittleEndian.Uint64(bytes[21:29])
+	walEntry.Key = bytes[29 : 29+walEntry.KeySize]
+	walEntry.Value = bytes[29+walEntry.KeySize : 29+walEntry.KeySize+walEntry.ValueSize]
+	return walEntry
+
+}
+
+func ReadWalEntry(file *os.File) *WalEntry {
+
+	walEntry := NewWalEntry()
+
+	crc := make([]byte, 4)
+	_, err := file.Read(crc)
+	if err != nil {
+		panic(err)
+	}
+	walEntry.Crc = binary.LittleEndian.Uint32(crc)
+
+	timestamp := make([]byte, 8)
+	_, err = file.Read(timestamp)
+	if err != nil {
+		panic(err)
+	}
+	walEntry.Timestamp = binary.LittleEndian.Uint64(timestamp)
+
+	tombstone := make([]byte, 1)
+	_, err = file.Read(tombstone)
+	if err != nil {
+		panic(err)
+	}
+	walEntry.Tombstone = timestamp[0]
+
+	keySize := make([]byte, 8)
+	_, err = file.Read(keySize)
+	if err != nil {
+		panic(err)
+	}
+	walEntry.KeySize = binary.LittleEndian.Uint64(keySize)
+
+	valueSize := make([]byte, 8)
+	_, err = file.Read(valueSize)
+	if err != nil {
+		panic(err)
+	}
+	walEntry.ValueSize = binary.LittleEndian.Uint64(valueSize)
+
+	key := make([]byte, walEntry.KeySize)
+	_, err = file.Read(key)
+	if err != nil {
+		panic(err)
+	}
+	walEntry.Key = key
+
+	value := make([]byte, walEntry.ValueSize)
+	_, err = file.Read(value)
+	if err != nil {
+		panic(err)
+	}
+	walEntry.Value = value
+
+	return walEntry
 
 }
