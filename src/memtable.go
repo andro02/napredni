@@ -62,7 +62,7 @@ func (memtable *Memtable) flush() {
 	var dataSize uint32 = 0
 	var indexSize uint32 = 0
 
-	//bloomFilter := NewBF()
+	bloomFilter := NewBF(10, 0.1)
 	data := make([][]byte, 0)
 
 	for _, element := range elements {
@@ -72,6 +72,7 @@ func (memtable *Memtable) flush() {
 		dataSize += dataRowSize
 		indexRowSize := WriteIndexRow(element.Value, indexFile, offset)
 		indexSize += indexRowSize
+		bloomFilter.Add(element.Key)
 
 	}
 
