@@ -37,6 +37,16 @@ func (memtable *Memtable) Set(key string, value []byte) {
 
 }
 
+func (memtable *Memtable) Delete(key string, value []byte) {
+	found, _ := memtable.BT.SearchKey(key)
+	if found != nil {
+		memtable.Set(key, value)
+		return
+	}
+	memtable.BT.Update(key, value)
+
+}
+
 func (memtable *Memtable) flush() {
 	time := strconv.FormatInt(time.Now().UnixMicro(), 10)
 	path := "sstable" + string(os.PathSeparator) + time + "_"

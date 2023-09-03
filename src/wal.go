@@ -35,13 +35,13 @@ func NewWal() *Wal {
 
 }
 
-func (wal *Wal) Write(key string, value []byte) *WalEntry {
+func (wal *Wal) Write(key string, value []byte, tombstone byte) *WalEntry {
 
 	if uint32(len(wal.Data)) >= wal.MaxDataSize {
 		wal.Dump()
 	}
 
-	newWalEntry := NewWalEntry()
+	newWalEntry := NewWalEntry(tombstone)
 	newWalEntry.Write(key, value)
 	wal.Data = append(wal.Data, newWalEntry)
 
@@ -49,10 +49,9 @@ func (wal *Wal) Write(key string, value []byte) *WalEntry {
 
 }
 
-func (wal *Wal) Delete(key string) {
+func (wal *Wal) Delete(key string, tombstone byte) {
 
-	newWalEntry := NewWalEntry()
-	newWalEntry.Tombstone = 1
+	newWalEntry := NewWalEntry(tombstone)
 	newWalEntry.Write(key, nil)
 	wal.Data = append(wal.Data, newWalEntry)
 

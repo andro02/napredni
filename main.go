@@ -9,15 +9,22 @@ import (
 	"strings"
 	"time"
 
+	"github.com/andro02/napredni/config"
 	"github.com/andro02/napredni/src"
 )
 
 func main() {
 
+	cfg, err := config.ReadConfig("config.txt")
+	if err != nil {
+		panic(err)
+	}
+	config.LoadValues(cfg)
 	wal := src.NewWal()
 	memtable := src.NewMT()
+	cache := src.Init()
 
-	test(wal, memtable)
+	test(wal, memtable, cache)
 	return
 	// path := "sstable//1693756325_"
 	// file, _ := os.Open(path + "data.bin")
@@ -62,12 +69,12 @@ func main() {
 			}
 		case commands[1]:
 			{
-				value := src.Get(memtable, tokens)
-				fmt.Println(value)
+				value, tombstone := src.Get(memtable, cache, tokens)
+				fmt.Println(value, tombstone)
 			}
 		case commands[2]:
 			{
-				fmt.Println("DELETE code")
+				src.Delete(wal, memtable, tokens)
 			}
 		case commands[3]:
 			{
@@ -92,7 +99,7 @@ func main() {
 	}
 }
 
-func test(wal *src.Wal, memtable *src.Memtable) {
+func test(wal *src.Wal, memtable *src.Memtable, cache *src.LRUCache) {
 
 	size := 30
 
@@ -102,6 +109,7 @@ func test(wal *src.Wal, memtable *src.Memtable) {
 
 	keys := make([]string, 0)
 	values := make([]string, 0)
+	tombstones := make([]byte, 0)
 
 	for i := 0; i < size; i++ {
 
@@ -122,6 +130,7 @@ func test(wal *src.Wal, memtable *src.Memtable) {
 
 		keys = append(keys, string(key))
 		values = append(values, string(value))
+		tombstones = append(tombstones, 0)
 
 		//fmt.Println(tokens[1], " ", tokens[2])
 		src.Put(wal, memtable, tokens)
@@ -135,11 +144,11 @@ func test(wal *src.Wal, memtable *src.Memtable) {
 		tokens[0] = "GET"
 		tokens[1] = keys[i]
 
-		value := src.Get(memtable, tokens)
+		value, tombstone := src.Get(memtable, cache, tokens)
 		if value != values[i] {
-			fmt.Println("Error: ", keys[i], " ", value, " ", values[i])
+			fmt.Println("Error: ", keys[i], " ", value, tombstone, " ", values[i], tombstones[i])
 		} else {
-			fmt.Println("Success: ", keys[i], " ", value, " ", values[i])
+			fmt.Println("Success: ", keys[i], " ", value, tombstone, " ", values[i], tombstones[i])
 		}
 	}
 

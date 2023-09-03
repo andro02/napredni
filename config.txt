@@ -1,4 +1,4 @@
-cacheSize=1
+cacheSize=15
 lsmDepth=4
 memtableCapacity=10000
 memtableThreshold=5

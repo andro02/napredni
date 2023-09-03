@@ -129,6 +129,13 @@ func (bTree *BTree) PrintTree(x *BTreeNode, l int) {
 
 }
 
+func (bTree *BTree) Update(key string, value []byte) {
+	node, i := bTree.SearchKeyRecursive(key, bTree.Root)
+	if i != -1 {
+		node.Data[i].Value = value
+	}
+}
+
 func (bTree *BTree) SearchKey(key string) ([]byte, int) {
 
 	node, i := bTree.SearchKeyRecursive(key, bTree.Root)

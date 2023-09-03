@@ -30,12 +30,12 @@ type WalEntry struct {
 	Value     []byte
 }
 
-func NewWalEntry() *WalEntry {
+func NewWalEntry(tombstone byte) *WalEntry {
 
 	walEntry := WalEntry{
 		Crc:       0,
 		Timestamp: uint64(time.Now().Unix()),
-		Tombstone: 0,
+		Tombstone: tombstone,
 		KeySize:   0,
 		ValueSize: 0,
 		Key:       nil,
@@ -105,7 +105,7 @@ func (walEntry *WalEntry) ToBytes() []byte {
 
 func WalEntryFromBytes(bytes []byte) *WalEntry {
 
-	walEntry := NewWalEntry()
+	walEntry := NewWalEntry(0)
 	walEntry.Crc = binary.LittleEndian.Uint32(bytes[:4])
 	walEntry.Timestamp = binary.LittleEndian.Uint64(bytes[4:12])
 	walEntry.Tombstone = bytes[12]
@@ -119,7 +119,7 @@ func WalEntryFromBytes(bytes []byte) *WalEntry {
 
 func ReadWalEntry(file *os.File) *WalEntry {
 
-	walEntry := NewWalEntry()
+	walEntry := NewWalEntry(0)
 
 	crc := make([]byte, 4)
 	_, err := file.Read(crc)
