@@ -79,7 +79,7 @@ func (s *SkipList) InsertElement(key string, value []byte) {
 
 }
 
-func (s *SkipList) SearchElement(key string) {
+func (s *SkipList) SearchElement(key string) []byte {
 	current := s.Head
 
 	for i := s.maxHeight; i != -1; i-- {
@@ -92,7 +92,9 @@ func (s *SkipList) SearchElement(key string) {
 	current = current.next[0]
 	if current != nil || current.key == key {
 		fmt.Println("Found key ", key)
+		return current.value
 	}
+	return nil
 
 }
 func (s *SkipList) UpdateElement(key string, newValue []byte) {

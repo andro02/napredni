@@ -12,7 +12,6 @@ import (
 
 func main() {
 
-	
 
 	wal := src.NewWal()
 	bTree := src.NewBTree()
