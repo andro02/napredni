@@ -3,7 +3,9 @@ package src
 import (
 	"crypto/md5"
 	"encoding/binary"
+	"fmt"
 	"math"
+	"os"
 	"time"
 )
 
@@ -72,4 +74,69 @@ func (bloomFilter *BloomFilter) IsInBF(element string) bool {
 		}
 	}
 	return true
+}
+
+func (bloomFilter *BloomFilter) Encode(path string) {
+	bfFile, err := os.Create(path + "filter.bin")
+	if err != nil {
+		panic(err)
+	}
+
+	m := make([]byte, 4)
+	binary.LittleEndian.PutUint32(m, bloomFilter.M)
+	bfFile.Write(m)
+
+	k := make([]byte, 4)
+	binary.LittleEndian.PutUint32(k, bloomFilter.K)
+	bfFile.Write(k)
+
+	for _, hash := range bloomFilter.HashFunctions {
+		bfFile.Write(hash.Seed)
+	}
+
+	bfFile.Write(bloomFilter.Set)
+	bf2 := Decode(path)
+	if bf2 == bloomFilter {
+		fmt.Println("Success")
+	}
+}
+
+func Decode(path string) *BloomFilter {
+	bf := NewBF(0, 0)
+
+	bfFile, err := os.Open(path + "filter.bin")
+	if err != nil {
+		panic(err)
+	}
+
+	m := make([]byte, 4)
+	_, err = bfFile.Read(m)
+	if err != nil {
+		panic(err)
+	}
+	bf.M = binary.LittleEndian.Uint32(m)
+
+	k := make([]byte, 4)
+	_, err = bfFile.Read(k)
+	if err != nil {
+		panic(err)
+	}
+	bf.K = binary.LittleEndian.Uint32(k)
+
+	bf.HashFunctions = make([]HashWithSeed, bf.K)
+	for i := 0; i < int(bf.K); i++ {
+		bf.HashFunctions[i].Seed = make([]byte, 32)
+		_, err = bfFile.Read(bf.HashFunctions[i].Seed)
+		if err != nil {
+			panic(err)
+		}
+	}
+
+	bf.Set = make([]byte, bf.M)
+	_, err = bfFile.Read(bf.Set)
+	if err != nil {
+		panic(err)
+	}
+
+	return bf
 }

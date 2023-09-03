@@ -20,7 +20,7 @@ func CreateSummary(indexFile *os.File, filepath string, indexSize uint32) {
 	for offset != indexSize {
 		indexEntry, indexEntrySize := ReadIndexRow(indexFile)
 
-		if i%10 == 0 {
+		if i%4 == 0 || offset+indexEntrySize == indexSize {
 			summaryEntries = append(summaryEntries, indexEntry)
 			summaryEntries[len(summaryEntries)-1].Offset = offset
 		}
