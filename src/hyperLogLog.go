@@ -160,11 +160,11 @@ func (hll HyperLogLog) Add(data []byte, offset uint64) bool {
 
 func (hll *HyperLogLog) Update(offset uint64) bool {
 	file, err := os.OpenFile("hll.bin", os.O_RDWR, 0600)
-	defer file.Close()
 	if err != nil {
 		fmt.Println(err)
 		return false
 	}
+	defer file.Close()
 
 	fi, err := file.Stat()
 	if err != nil {
@@ -235,11 +235,11 @@ func (hll *HyperLogLog) CalculateEstimation() float64 {
 
 func (hll *HyperLogLog) KeyCheck() (bool, uint64) {
 	file, err := os.OpenFile("hll.bin", os.O_RDONLY, 0600)
-	defer file.Close()
 	if err != nil {
 		fmt.Println(err)
 		return false, 0
 	}
+	defer file.Close()
 
 	meta_data, err := file.Stat()
 	if err != nil {
@@ -265,7 +265,7 @@ func (hll *HyperLogLog) KeyCheck() (bool, uint64) {
 		copy(current_key[:], data[offset:offset+16])
 		hll.FillHLL(data, &offset)
 
-		if bytes.Compare(current_key[:], hll.key[:]) == 0 {
+		if bytes.Equal(current_key[:], hll.key[:]) {
 
 			hll.buckets = make([]uint32, hll.m)
 			for i := 0; i < int(hll.m); i++ {
@@ -293,10 +293,10 @@ func (hll *HyperLogLog) FillHLL(data []byte, offset *uint64) {
 
 func (hll *HyperLogLog) Serialize() error {
 	file, err := os.OpenFile("hll.bin", os.O_WRONLY|os.O_APPEND, 0600)
-	defer file.Close()
 	if err != nil {
 		return err
 	}
+	defer file.Close()
 
 	if err := hll.Write(file); err != nil {
 		return err
@@ -312,10 +312,22 @@ func (hll *HyperLogLog) Serialize() error {
 func (hll *HyperLogLog) Write(writer io.Writer) error {
 	var buf bytes.Buffer
 	err := binary.Write(&buf, binary.BigEndian, hll.key)
+	if err != nil {
+		return err
+	}
 	err = binary.Write(&buf, binary.BigEndian, hll.p)
+	if err != nil {
+		return err
+	}
 	err = binary.Write(&buf, binary.BigEndian, hll.m)
+	if err != nil {
+		return err
+	}
 	for _, reg := range hll.buckets {
 		err = binary.Write(&buf, binary.BigEndian, reg)
+		if err != nil {
+			return err
+		}
 	}
 	_, err = writer.Write(buf.Bytes())
 	return err

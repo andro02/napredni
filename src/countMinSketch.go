@@ -172,11 +172,11 @@ func (cms *CountMinSketch) AddToSketch(data []byte, offset uint64) bool {
 
 func (cms *CountMinSketch) Update(offset uint64) bool {
 	file, err := os.OpenFile("cms.bin", os.O_RDWR, 0600)
-	defer file.Close()
 	if err != nil {
 		fmt.Println(err)
 		return false
 	}
+	defer file.Close()
 
 	meta_data, err := file.Stat()
 	if err != nil {
@@ -237,11 +237,11 @@ func (cms *CountMinSketch) GetMinFrequency(data []byte) int32 {
 }
 func (cms *CountMinSketch) KeyCheck() (bool, uint64) {
 	file, err := os.OpenFile("cms.bin", os.O_RDONLY, 0600)
-	defer file.Close()
 	if err != nil {
 		fmt.Println(err)
 		return false, 0
 	}
+	defer file.Close()
 
 	meta_data, err := file.Stat()
 	if err != nil {
@@ -272,7 +272,7 @@ func (cms *CountMinSketch) KeyCheck() (bool, uint64) {
 		for i := 0; i < int(cms.d); i++ {
 			cms.frequencyTable[i] = make([]int32, cms.w)
 		}
-		if bytes.Compare(current_key[:], cms.key[:]) == 0 {
+		if bytes.Equal(current_key[:], cms.key[:]) {
 			// If key is wanted one we load cms
 			cms.FillTableData(data, &offset)
 
@@ -308,10 +308,10 @@ func (cms *CountMinSketch) FillTableData(data []byte, offset *uint64) {
 func (cms *CountMinSketch) Serialize() error {
 	fmt.Println(cms.key)
 	file, err := os.OpenFile("cms.bin", os.O_WRONLY|os.O_APPEND, 0600)
-	defer file.Close()
 	if err != nil {
 		return err
 	}
+	defer file.Close()
 	if err := cms.Write(file); err != nil {
 		return err
 	}
