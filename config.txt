@@ -1,0 +1,9 @@
+cacheSize=1
+lsmDepth=4
+memtableCapacity=10000
+memtableThreshold=5
+memtableStructure=0
+requestPermin=10
+sstableMultipleFiles=0
+sstableSegmentSize=3
+walSegmentSize=10
