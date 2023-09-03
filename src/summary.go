@@ -20,7 +20,7 @@ func CreateSummary(indexFile *os.File, filepath string, indexSize uint32) {
 	for offset != indexSize {
 		indexEntry, indexEntrySize := ReadIndexRow(indexFile)
 
-		if i%10 == 0 {
+		if i%4 == 0 || offset+indexEntrySize == indexSize {
 			summaryEntries = append(summaryEntries, indexEntry)
 			summaryEntries[len(summaryEntries)-1].Offset = offset
 		}
@@ -50,5 +50,33 @@ func WriteSummaryRow(indexEntry *IndexEntry, summaryFile *os.File) uint32 {
 	summaryFile.Write(offsetBytes)
 
 	return uint32(len(keySize) + len(indexEntry.Key) + len(offsetBytes))
+
+}
+func ReadSummaryRow(summaryFile *os.File) *IndexEntry {
+
+	summaryEntry := NewIndexEntry()
+
+	keySize := make([]byte, 8)
+	_, err := summaryFile.Read(keySize)
+	if err != nil {
+		panic(err)
+	}
+	summaryEntry.KeySize = binary.LittleEndian.Uint64(keySize)
+
+	key := make([]byte, summaryEntry.KeySize)
+	_, err = summaryFile.Read(key)
+	if err != nil {
+		panic(err)
+	}
+	summaryEntry.Key = key
+
+	offset := make([]byte, 4)
+	_, err = summaryFile.Read(offset)
+	if err != nil {
+		panic(err)
+	}
+	summaryEntry.Offset = binary.LittleEndian.Uint32(offset)
+
+	return summaryEntry
 
 }
