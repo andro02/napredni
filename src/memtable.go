@@ -17,7 +17,7 @@ type Memtable struct {
 
 func NewMT() *Memtable {
 	memtable := Memtable{
-		Threshhold: 200,
+		Threshhold: 700,
 		Size:       0,
 		BT:         NewBTree(),
 		//SL:         NewSkipList(3),
@@ -29,15 +29,8 @@ func (memtable *Memtable) Set(key string, value []byte) {
 	newEntrySize := uint32(binary.Size([]byte(key))) + uint32(len(value))
 	if memtable.Size+newEntrySize >= memtable.Threshhold {
 		memtable.flush()
-		bTree := NewBTree()
-
-		*memtable = Memtable{
-			Threshhold: 50,
-			Size:       0,
-			BT:         bTree,
-			SL:         nil,
-		}
-
+		memtable.BT = NewBTree()
+		memtable.Size = 0
 	}
 	memtable.BT.Insert(key, value)
 	memtable.Size += newEntrySize
@@ -45,7 +38,7 @@ func (memtable *Memtable) Set(key string, value []byte) {
 }
 
 func (memtable *Memtable) flush() {
-	time := strconv.FormatInt(time.Now().Unix(), 10)
+	time := strconv.FormatInt(time.Now().UnixMicro(), 10)
 	path := "sstable" + string(os.PathSeparator) + time + "_"
 	dataFile, err := os.Create(path + "data.bin")
 	if err != nil {
@@ -62,7 +55,7 @@ func (memtable *Memtable) flush() {
 	var dataSize uint32 = 0
 	var indexSize uint32 = 0
 
-	bloomFilter := NewBF(10, 0.1)
+	bloomFilter := NewBF(30, 0.1)
 	data := make([][]byte, 0)
 
 	for _, element := range elements {
@@ -76,6 +69,7 @@ func (memtable *Memtable) flush() {
 
 	}
 
+	bloomFilter.Encode(path)
 	merkle := CreateMerkle(data)
 	merkle.WriteMetadata(path)
 	CreateSummary(indexFile, path+"summary.bin", indexSize)
@@ -103,10 +97,10 @@ func CreateToc(path string) {
 	if err != nil {
 		panic(err)
 	}
-	// _, err = tocFile.WriteString(path + "filter.bin\n")
-	// if err != nil {
-	// 	panic(err)
-	// }
+	_, err = tocFile.WriteString(path + "filter.bin\n")
+	if err != nil {
+		panic(err)
+	}
 	_, err = tocFile.WriteString(path + "metadata.txt\n")
 	if err != nil {
 		panic(err)
