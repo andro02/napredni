@@ -5,33 +5,30 @@ import (
 	"os"
 )
 
-func Get(key string, sl *SkipList, cache *LRUCache, path string) []byte {
-
+func Get(key string, sl *SkipList, cache *LRUCache, path string) string {
 
 	foundELement := sl.SearchElement(key)
 	if foundELement != nil {
 		fmt.Println(foundELement)
-		return foundELement
-	} 
+		return string(foundELement)
+	}
 
-	value, cacheFound := cache.Get([]byte (key))
+	value, cacheFound := cache.Get([]byte(key))
 	if cacheFound {
 		return value
 	}
-		
+
 	offset, found := SearchSummary(key, path)
-	if found{
+	if found {
 		offset, found = SearchIndex(key, path, offset)
-		if found{
+		if found {
 			value = GetValueFromDataFile(path, offset)
 			return value
 		}
 
 	}
-	
-	
 
-	return nil
+	return ""
 }
 
 func SearchSummary(key string, path string) (uint32, bool) {
@@ -57,33 +54,33 @@ func SearchSummary(key string, path string) (uint32, bool) {
 
 	return 0, false
 }
- func SearchIndex(key string , path string, offset uint32) (uint32, bool){
+func SearchIndex(key string, path string, offset uint32) (uint32, bool) {
 
 	indexFile, err := os.Open(path)
 	defer indexFile.Close()
-	if err != nil{
+	if err != nil {
 		panic(err)
 	}
 	indexFile.Seek(int64(offset), 0)
-	indexEntry := ReadIndexRow(indexFile)
-	for string(indexEntry.Key [:] ) < key {
-		indexEntry = ReadIndexRow(indexFile)
+	indexEntry, _ := ReadIndexRow(indexFile)
+	for string(indexEntry.Key[:]) < key {
+		indexEntry, _ = ReadIndexRow(indexFile)
 	}
-	if string(indexEntry.Key [:]) == key{
+	if string(indexEntry.Key[:]) == key {
 		return indexEntry.Offset, true
 	}
 	return 0, false
 
- }
- 
- func GetValueFromDataFile(path string , offset uint32) []byte{
+}
+
+func GetValueFromDataFile(path string, offset uint32) string {
 	dataFile, err := os.Open(path)
 	defer dataFile.Close()
-	if err != nil{
+	if err != nil {
 		panic(err)
 	}
 	dataFile.Seek(int64(offset), 0)
 	dataEntry := ReadWalEntry(dataFile)
-	return dataEntry
+	return string(dataEntry.Value)
 
- }
+}
