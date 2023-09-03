@@ -22,7 +22,7 @@ func NewBTree() *BTree {
 
 func (bTree *BTree) Insert(key string, value []byte) {
 
-	_, found := bTree.SearchKey(key, bTree.Root)
+	_, found := bTree.SearchKey(key)
 
 	if found != -1 {
 		fmt.Println("Key already exists. Error.")
@@ -129,7 +129,18 @@ func (bTree *BTree) PrintTree(x *BTreeNode, l int) {
 
 }
 
-func (bTree *BTree) SearchKey(key string, x *BTreeNode) (*BTreeNode, int) {
+func (bTree *BTree) SearchKey(key string) ([]byte, int) {
+
+	node, i := bTree.SearchKeyRecursive(key, bTree.Root)
+	var value []byte = nil
+	if i != -1 {
+		value = node.Data[i].Value
+	}
+	return value, i
+
+}
+
+func (bTree *BTree) SearchKeyRecursive(key string, x *BTreeNode) (*BTreeNode, int) {
 
 	i := 0
 	for i < len(x.Data) && key > x.Data[i].Key {
@@ -140,7 +151,7 @@ func (bTree *BTree) SearchKey(key string, x *BTreeNode) (*BTreeNode, int) {
 	} else if x.Leaf {
 		return nil, -1
 	} else {
-		return bTree.SearchKey(key, x.Child[i])
+		return bTree.SearchKeyRecursive(key, x.Child[i])
 	}
 
 }

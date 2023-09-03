@@ -24,10 +24,10 @@ func NewWal() *Wal {
 
 	wal := Wal{
 		Data:               make([]*WalEntry, 0),
-		MaxDataSize:        3,
+		MaxDataSize:        50,
 		Path:               "logs",
 		CurrentFileEntries: 0,
-		MaxFileSize:        3,
+		MaxFileSize:        50,
 		Prefix:             "wal.0.0.",
 		CurrentFilename:    uint32(currentFilename),
 	}

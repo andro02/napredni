@@ -4,17 +4,29 @@ import (
 	"bufio"
 	"fmt"
 	"log"
+	"math/rand"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/andro02/napredni/src"
 )
 
 func main() {
 
-
 	wal := src.NewWal()
 	memtable := src.NewMT()
+
+	test(wal, memtable)
+	return
+	// path := "sstable//1693756325_"
+	// file, _ := os.Open(path + "data.bin")
+	// for {
+	// 	fmt.Println(src.ReadWalEntry(file))
+	// }
+	// src.TestIndex(path)
+	// src.TestSummary(path)
+	//return
 
 	reader := bufio.NewReader(os.Stdin)
 	var commands = [5]string{"PUT", "GET", "DELETE", "LIST", "RANGESCAN"}
@@ -42,18 +54,16 @@ func main() {
 			continue
 		}
 
-		fmt.Println(tokens[0])
-
 		switch tokens[0] {
 
 		case commands[0]:
 			{
-				fmt.Println("PUT code")
 				src.Put(wal, memtable, tokens)
 			}
 		case commands[1]:
 			{
-				fmt.Println("GET code")
+				value := src.Get(memtable, tokens)
+				fmt.Println(value)
 			}
 		case commands[2]:
 			{
@@ -70,4 +80,57 @@ func main() {
 
 		}
 	}
+}
+
+func test(wal *src.Wal, memtable *src.Memtable) {
+
+	size := 30
+
+	rand.New(rand.NewSource(time.Now().UnixNano()))
+
+	var letters = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_")
+
+	keys := make([]string, 0)
+	values := make([]string, 0)
+
+	for i := 0; i < size; i++ {
+
+		tokens := make([]string, 3)
+		key := make([]rune, rand.Intn(20)+1)
+		for i := range key {
+			key[i] = letters[rand.Intn(len(letters))]
+		}
+
+		value := make([]rune, rand.Intn(20)+1)
+		for i := range value {
+			value[i] = letters[rand.Intn(len(letters))]
+		}
+
+		tokens[0] = "PUT"
+		tokens[1] = string(key)
+		tokens[2] = string(value)
+
+		keys = append(keys, string(key))
+		values = append(values, string(value))
+
+		//fmt.Println(tokens[1], " ", tokens[2])
+		src.Put(wal, memtable, tokens)
+
+	}
+
+	for i := 0; i < size; i++ {
+
+		tokens := make([]string, 2)
+
+		tokens[0] = "GET"
+		tokens[1] = keys[i]
+
+		value := src.Get(memtable, tokens)
+		if value != values[i] {
+			fmt.Println("Error: ", keys[i], " ", value, " ", values[i])
+		} else {
+			fmt.Println("Success: ", keys[i], " ", value, " ", values[i])
+		}
+	}
+
 }
