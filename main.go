@@ -11,12 +11,11 @@ import (
 )
 
 func main() {
-
 	wal := src.NewWal()
 	memtable := src.NewMT()
 
 	reader := bufio.NewReader(os.Stdin)
-	var commands = [5]string{"PUT", "GET", "DELETE", "LIST", "RANGESCAN"}
+	var commands = [7]string{"PUT", "GET", "DELETE", "LIST", "RANGESCAN", "CMS", "HLL"}
 	var tokens []string
 
 	for {
@@ -65,6 +64,16 @@ func main() {
 		case commands[4]:
 			{
 				fmt.Println("RANGESCAN code")
+			}
+		case commands[5]:
+			{
+				fmt.Println("Count-Min-Sketch Code")
+				src.CMSMenu()
+			}
+		case commands[6]:
+			{
+				fmt.Println("Hyper-Log-Log Code")
+				src.HLLMenu()
 			}
 
 		}
