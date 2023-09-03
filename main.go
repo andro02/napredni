@@ -12,6 +12,7 @@ import (
 
 func main() {
 	wal := src.NewWal()
+	memtable := src.NewMT()
 
 	reader := bufio.NewReader(os.Stdin)
 	var commands = [7]string{"PUT", "GET", "DELETE", "LIST", "RANGESCAN", "CMS", "HLL"}
@@ -46,7 +47,7 @@ func main() {
 		case commands[0]:
 			{
 				fmt.Println("PUT code")
-				src.Put(wal, tokens)
+				src.Put(wal, memtable, tokens)
 			}
 		case commands[1]:
 			{

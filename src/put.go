@@ -2,7 +2,7 @@ package src
 
 import "fmt"
 
-func Put(wal *Wal, tokens []string) {
+func Put(wal *Wal, memtable *Memtable, tokens []string) {
 
 	if len(tokens) != 3 {
 		fmt.Println("Invalid input. Please try again.")
@@ -11,7 +11,7 @@ func Put(wal *Wal, tokens []string) {
 	var key string = tokens[1]
 	var value string = tokens[2]
 
-	wal.Write(key, []byte(value))
-	fmt.Printf("")
+	walEntry := wal.Write(key, []byte(value))
+	memtable.Set(key, walEntry.ToBytes())
 
 }

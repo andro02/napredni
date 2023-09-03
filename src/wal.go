@@ -19,13 +19,13 @@ type Wal struct {
 
 func NewWal() *Wal {
 
-	files, _ := os.ReadDir("logs/")
+	files, _ := os.ReadDir("logs" + string(os.PathSeparator))
 	currentFilename := len(files)
 
 	wal := Wal{
 		Data:               make([]*WalEntry, 0),
 		MaxDataSize:        3,
-		Path:               "logs/",
+		Path:               "logs",
 		CurrentFileEntries: 0,
 		MaxFileSize:        3,
 		Prefix:             "wal.0.0.",
@@ -35,7 +35,7 @@ func NewWal() *Wal {
 
 }
 
-func (wal *Wal) Write(key string, value []byte) {
+func (wal *Wal) Write(key string, value []byte) *WalEntry {
 
 	if uint32(len(wal.Data)) >= wal.MaxDataSize {
 		wal.Dump()
@@ -44,6 +44,8 @@ func (wal *Wal) Write(key string, value []byte) {
 	newWalEntry := NewWalEntry()
 	newWalEntry.Write(key, value)
 	wal.Data = append(wal.Data, newWalEntry)
+
+	return newWalEntry
 
 }
 
@@ -58,7 +60,7 @@ func (wal *Wal) Delete(key string) {
 
 func (wal *Wal) Dump() bool {
 
-	currentFile, err := os.OpenFile(wal.Path+wal.Prefix+strconv.Itoa(int(wal.CurrentFilename))+".log", os.O_RDWR|os.O_CREATE, 0666)
+	currentFile, err := os.OpenFile(wal.Path+string(os.PathSeparator)+wal.Prefix+strconv.Itoa(int(wal.CurrentFilename))+".log", os.O_RDWR|os.O_CREATE, 0666)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -72,7 +74,7 @@ func (wal *Wal) Dump() bool {
 		if wal.CurrentFileEntries >= wal.MaxFileSize {
 			wal.CurrentFilename++
 			currentFile.Close()
-			currentFile, _ = os.OpenFile(wal.Path+strconv.Itoa(int(wal.CurrentFilename))+".log", os.O_RDWR|os.O_CREATE, 0666)
+			currentFile, _ = os.OpenFile(wal.Path+string(os.PathSeparator)+wal.Prefix+strconv.Itoa(int(wal.CurrentFilename))+".log", os.O_RDWR|os.O_CREATE, 0666)
 		}
 
 	}

@@ -2,6 +2,7 @@ package src
 
 import (
 	"fmt"
+	"strconv"
 )
 
 type BTree struct {
@@ -13,13 +14,20 @@ func NewBTree() *BTree {
 
 	bTree := BTree{
 		Root:  NewBTreeNode(true),
-		Limit: 50,
+		Limit: 3,
 	}
 	return &bTree
 
 }
 
-func (bTree *BTree) Insert(key int, value []byte) {
+func (bTree *BTree) Insert(key string, value []byte) {
+
+	_, found := bTree.SearchKey(key, bTree.Root)
+
+	if found != -1 {
+		fmt.Println("Key already exists. Error.")
+		return
+	}
 
 	k := NewKeyValuePair(key, value)
 	root := bTree.Root
@@ -42,9 +50,11 @@ func (bTree *BTree) InsertNonFull(x *BTreeNode, k *KeyValuePair) {
 
 	i := len(x.Data) - 1
 
-	if x.Leaf == true {
+	if x.Leaf {
 
-		x.Data = append(x.Data, nil)
+		oldData := x.Data
+		x.Data = make([]*KeyValuePair, len(oldData)+1)
+		copy(x.Data, oldData)
 		for i >= 0 && k.Key < x.Data[i].Key {
 			x.Data[i+1] = x.Data[i]
 			i -= 1
@@ -64,6 +74,9 @@ func (bTree *BTree) InsertNonFull(x *BTreeNode, k *KeyValuePair) {
 				i += 1
 			}
 		}
+		if k.Key == strconv.Itoa(11) {
+			fmt.Print()
+		}
 		bTree.InsertNonFull(x.Child[i], k)
 
 	}
@@ -75,19 +88,25 @@ func (bTree *BTree) SplitChild(x *BTreeNode, index int) {
 	y := x.Child[index]
 	z := NewBTreeNode(y.Leaf)
 
-	if len(x.Child) <= index+1 {
-		x.Child = append(x.Child, nil)
+	oldChild := x.Child
+	x.Child = make([]*BTreeNode, len(oldChild)+1)
+	copy(x.Child, oldChild)
+	for i := len(x.Child) - 1; i > index+1; i-- {
+		x.Child[i] = x.Child[i-1]
 	}
 	x.Child[index+1] = z
 
-	if len(x.Data) <= index {
-		x.Data = append(x.Data, nil)
+	oldData := x.Data
+	x.Data = make([]*KeyValuePair, len(oldData)+1)
+	copy(x.Data, oldData)
+	for i := len(x.Data) - 1; i > index; i-- {
+		x.Data[i] = x.Data[i-1]
 	}
 	x.Data[index] = y.Data[bTree.Limit-1]
 
 	z.Data = y.Data[bTree.Limit : 2*bTree.Limit-1]
 	y.Data = y.Data[0 : bTree.Limit-1]
-	if y.Leaf == false {
+	if !y.Leaf {
 		z.Child = y.Child[bTree.Limit : 2*bTree.Limit]
 		y.Child = y.Child[0:bTree.Limit]
 	}
@@ -110,7 +129,7 @@ func (bTree *BTree) PrintTree(x *BTreeNode, l int) {
 
 }
 
-func (bTree *BTree) SearchKey(key int, x *BTreeNode) (*BTreeNode, int) {
+func (bTree *BTree) SearchKey(key string, x *BTreeNode) (*BTreeNode, int) {
 
 	i := 0
 	for i < len(x.Data) && key > x.Data[i].Key {
@@ -118,7 +137,7 @@ func (bTree *BTree) SearchKey(key int, x *BTreeNode) (*BTreeNode, int) {
 	}
 	if i < len(x.Data) && key == x.Data[i].Key {
 		return x, i
-	} else if x.Leaf == true {
+	} else if x.Leaf {
 		return nil, -1
 	} else {
 		return bTree.SearchKey(key, x.Child[i])
@@ -126,21 +145,59 @@ func (bTree *BTree) SearchKey(key int, x *BTreeNode) (*BTreeNode, int) {
 
 }
 
+func (bTree *BTree) GetAllElements() []*KeyValuePair {
+
+	elements := make([]*KeyValuePair, 0)
+	elements = bTree.GetAllElementsRecursive(bTree.Root, elements)
+	return elements
+
+}
+
+func (bTree *BTree) GetAllElementsRecursive(node *BTreeNode, elements []*KeyValuePair) []*KeyValuePair {
+
+	for i := 0; i < len(node.Child); i++ {
+		elements = bTree.GetAllElementsRecursive(node.Child[i], elements)
+		if i != len(node.Child)-1 {
+			elements = append(elements, node.Data[i])
+		}
+	}
+	if len(node.Child) == 0 {
+		for i := 0; i < len(node.Data); i++ {
+			elements = append(elements, node.Data[i])
+		}
+	}
+	return elements
+
+}
+
 // func Test() {
 
 // 	B := NewBTree()
+// 	size := 100
 
-// 	for i := 0; i < 10000000; i++ {
-// 		B.Insert(i, []byte("vrednost"))
+// 	for i := 0; i < size; i++ {
+// 		B.Insert(strconv.Itoa(i), []byte("vrednost"))
+// 		//B.Insert(i, []byte("vrednost"))
 // 		//B.PrintTree(B.Root, 0)
+// 		//fmt.Println("-----------")
 // 	}
-// 	for i := 0; i < 10000000; i++ {
-// 		_, index := B.SearchKey(-1, B.Root)
+// 	//B.PrintTree(B.Root, 0)
+// 	elements := B.GetAllElements()
+// 	fmt.Println(len(elements))
+// 	greske := 0
+// 	dobri := 0
+// 	for i := 0; i < size; i++ {
+// 		_, index := B.SearchKey(strconv.Itoa(i), B.Root)
+// 		//_, index := B.SearchKey(i, B.Root)
 // 		//fmt.Println(node, index)
 // 		if index == -1 {
-// 			fmt.Print("greska")
+// 			greske++
+// 			fmt.Println(i)
+// 		} else {
+// 			dobri++
 // 		}
 // 		//B.PrintTree(B.Root, 0)
 // 	}
+// 	fmt.Println("greske: ", greske, ", dobri: ", dobri)
 
 // }
