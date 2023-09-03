@@ -4,6 +4,7 @@ import (
 	"crypto/sha1"
 	"encoding/hex"
 	"fmt"
+	"os"
 )
 
 type Node struct {
@@ -102,17 +103,6 @@ func GenerateMerkleTreeRecursive(nodes []*Node) *Node {
 	}
 	return GenerateMerkleTreeRecursive(nextNodes)
 
-	// half := len(nodes) / 2
-
-	// if len(nodes) == 2 {
-	// 	return NewNode(Hash(append(nodes[0].data[:], nodes[1].data[:]...)), nodes[0], nodes[1])
-	// }
-
-	// left := GenerateMerkleTreeRecursive(nodes[:half])
-	// right := GenerateMerkleTreeRecursive(nodes[half:])
-	// data := Hash(append(left.data[:], right.data[:]...))
-	// return NewNode(data, left, right)
-
 }
 
 func PrintMerkle(node *Node, level int) {
@@ -125,6 +115,48 @@ func PrintMerkle(node *Node, level int) {
 		fmt.Println(level, ": ", "Right", ": ", node.right)
 		PrintMerkle(node.left, level+1)
 		PrintMerkle(node.right, level+1)
+	}
+
+}
+
+func CreateMerkle(data [][]byte) *MerkleRoot {
+
+	hashes := make([][20]byte, 0)
+	for _, element := range data {
+		hashes = append(hashes, Hash(element))
+	}
+	merkleRoot := GenerateMerkleTree(hashes)
+	return merkleRoot
+
+}
+
+func (merkle *MerkleRoot) WriteMetadata(path string) {
+
+	metadataFile, err := os.Create(path + "metadata.txt")
+	if err != nil {
+		panic(err)
+	}
+	node := merkle.root
+	metadataFile.WriteString(node.String())
+	node.WriteNodeChildren(metadataFile)
+
+}
+
+func (node *Node) WriteNodeChildren(metadataFile *os.File) {
+
+	if node.left != nil {
+		metadataFile.WriteString(node.left.String())
+	}
+	if node.right != nil {
+		metadataFile.WriteString(node.left.String())
+	}
+
+	if node.left != nil {
+		node.left.WriteNodeChildren(metadataFile)
+	}
+
+	if node.right != nil {
+		node.right.WriteNodeChildren(metadataFile)
 	}
 
 }

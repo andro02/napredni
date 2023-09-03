@@ -145,26 +145,35 @@ func (bTree *BTree) SearchKey(key string, x *BTreeNode) (*BTreeNode, int) {
 
 }
 
-func (bTree *BTree) GetAllElements(node *BTreeNode) {
+func (bTree *BTree) GetAllElements() []*KeyValuePair {
+
+	elements := make([]*KeyValuePair, 0)
+	elements = bTree.GetAllElementsRecursive(bTree.Root, elements)
+	return elements
+
+}
+
+func (bTree *BTree) GetAllElementsRecursive(node *BTreeNode, elements []*KeyValuePair) []*KeyValuePair {
 
 	for i := 0; i < len(node.Child); i++ {
-		bTree.GetAllElements(node.Child[i])
+		elements = bTree.GetAllElementsRecursive(node.Child[i], elements)
 		if i != len(node.Child)-1 {
-			fmt.Print(node.Data[i].Key, ", ")
+			elements = append(elements, node.Data[i])
 		}
 	}
 	if len(node.Child) == 0 {
 		for i := 0; i < len(node.Data); i++ {
-			fmt.Print(node.Data[i].Key, ", ")
+			elements = append(elements, node.Data[i])
 		}
 	}
+	return elements
 
 }
 
 // func Test() {
 
 // 	B := NewBTree()
-// 	size := 1000000
+// 	size := 100
 
 // 	for i := 0; i < size; i++ {
 // 		B.Insert(strconv.Itoa(i), []byte("vrednost"))
@@ -173,7 +182,8 @@ func (bTree *BTree) GetAllElements(node *BTreeNode) {
 // 		//fmt.Println("-----------")
 // 	}
 // 	//B.PrintTree(B.Root, 0)
-// 	//B.GetAllElements(B.Root)
+// 	elements := B.GetAllElements()
+// 	fmt.Println(len(elements))
 // 	greske := 0
 // 	dobri := 0
 // 	for i := 0; i < size; i++ {
