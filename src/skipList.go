@@ -53,6 +53,10 @@ func (s *SkipList) roll() int {
 	return level
 }
 func (s *SkipList) InsertElement(key string, value []byte) {
+	found := s.SearchElement(key)
+	if found != nil {
+		s.UpdateElement(key, value)
+	}
 	update := make([]*SkipListNode, s.maxHeight+1)
 	current := s.Head
 

@@ -14,6 +14,8 @@ import (
 )
 
 func main() {
+	tb := src.CreateTokenBucket(10, 1)
+
 
 	cfg, err := config.ReadConfig("config.txt")
 	if err != nil {
@@ -41,8 +43,12 @@ func main() {
 
 	for {
 		fmt.Print(">>> ")
+		if tb.Request(1) != false {
+			continue
+		}
 		input, err := reader.ReadString('\n')
 		input = strings.TrimRight(input, "\r\n")
+
 		if err != nil {
 			log.Fatal(err)
 		}
