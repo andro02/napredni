@@ -45,10 +45,18 @@ func (s *SkipList) roll() int {
 
 	for rand.Int31n(2) == 1 {
 		level++
+		if level > s.maxHeight {
+			level = s.maxHeight
+			break
+		}
 	}
 	return level
 }
 func (s *SkipList) InsertElement(key string, value []byte) {
+	found := s.SearchElement(key)
+	if found != nil {
+		s.UpdateElement(key, value)
+	}
 	update := make([]*SkipListNode, s.maxHeight+1)
 	current := s.Head
 
@@ -74,7 +82,6 @@ func (s *SkipList) InsertElement(key string, value []byte) {
 			n.next[i] = update[i].next[i]
 			update[i].next[i] = n
 		}
-		fmt.Println("Successfully inserted", key)
 	}
 
 }
@@ -90,9 +97,10 @@ func (s *SkipList) SearchElement(key string) []byte {
 	}
 
 	current = current.next[0]
-	if current != nil || current.key == key {
-		fmt.Println("Found key ", key)
-		return current.value
+	if current != nil {
+		if current.key == key {
+			return current.value
+		}
 	}
 	return nil
 
@@ -108,9 +116,10 @@ func (s *SkipList) UpdateElement(key string, newValue []byte) {
 	}
 
 	current = current.next[0]
-	if current != nil || current.key == key {
-		fmt.Println("Found key ", key)
-		current.value = newValue
+	if current != nil {
+		if current.key == key {
+			current.value = newValue
+		}
 	}
 
 }
