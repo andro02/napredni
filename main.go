@@ -101,7 +101,7 @@ func main() {
 
 func test(wal *src.Wal, memtable *src.Memtable, cache *src.LRUCache) {
 
-	size := 30
+	size := 1000
 
 	rand.New(rand.NewSource(time.Now().UnixNano()))
 
@@ -124,16 +124,26 @@ func test(wal *src.Wal, memtable *src.Memtable, cache *src.LRUCache) {
 			value[i] = letters[rand.Intn(len(letters))]
 		}
 
-		tokens[0] = "DELETE"
+		tokens[0] = "PUT"
 		tokens[1] = string(key)
 		tokens[2] = string(value)
+
+		// get := make([]string, 2)
+		// get[0] = "GET"
+		// get[1] = string(key)
 
 		keys = append(keys, string(key))
 		values = append(values, string(value))
 		tombstones = append(tombstones, 0)
 
 		//fmt.Println(tokens[1], " ", tokens[2])
-		src.Delete(wal, memtable, tokens)
+		src.Put(wal, memtable, tokens)
+		// value1, tombstone := src.Get(memtable, cache, get)
+		// if value1 != string(value) {
+		// 	fmt.Println("Error: ", get[1], " ", string(value), tombstone, " ", string(value), 0)
+		// } else {
+		// 	fmt.Println("Success: ", get[1], " ", value, tombstone, " ", string(value), 0)
+		// }
 
 	}
 

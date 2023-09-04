@@ -139,6 +139,7 @@ func (merkle *MerkleRoot) WriteMetadata(path string) {
 	node := merkle.root
 	metadataFile.WriteString(node.String())
 	node.WriteNodeChildren(metadataFile)
+	metadataFile.Close()
 
 }
 

@@ -11,6 +11,7 @@ import (
 var CACHE_SIZE = 10
 var MEMTABLE_THRESHOLD = 500
 var MEMTABLE_STRUCTURE = 0
+var MEMTABLE_SINGLE_FILE = 0
 var REQUEST_PERMIN = 5
 var SSTABLE_MULTIPLE_FILES = 1
 var SSTABLE_SEGMENT_SIZE = 5
@@ -66,5 +67,6 @@ func LoadValues(data map[string]int) {
 	BF_FALSE_POSITIVE_RATE = float64(data["bfFalsePositiveRate"]) / 100
 	BTREE_LIMIT = data["bTreeLimit"]
 	SKIPLIST_SIZE = data["skipListSize"]
+	MEMTABLE_SINGLE_FILE = data["memtableSingleFile"]
 
 }
