@@ -6,13 +6,16 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
+
+	"github.com/andro02/napredni/config"
 )
 
-func Get(memtable *Memtable, tokens []string) string {
+func Get(memtable *Memtable, cache *LRUCache, tokens []string) (string, byte) {
 
 	if len(tokens) != 2 {
 		fmt.Println("Invalid input. Please try again.")
-		return ""
+		return "", 0
 	}
 
 	var key string = tokens[1]
@@ -35,28 +38,36 @@ func Get(memtable *Memtable, tokens []string) string {
 
 			file.Close()
 
-			value := Search(key, memtable, path)
+			value, tombstone := Search(key, memtable, cache, path)
 			if value != "Not found" {
-				return value
+				return value, tombstone
 			}
 		}
 	}
 
-	return "Not found"
+	return "Not found", 0
 
 }
 
-func Search(key string, memtable *Memtable /*cache *LRUCache, */, path string) string {
+func Search(key string, memtable *Memtable, cache *LRUCache, path string) (string, byte) {
 
-	foundELement, _ := memtable.BT.SearchKey(key)
-	if foundELement != nil {
-		return string(WalEntryFromBytes(foundELement).Value)
+	var foundElement []byte
+	if config.MEMTABLE_STRUCTURE == 0 {
+		foundElement, _ = memtable.BT.SearchKey(key)
+
+	} else {
+		foundElement = memtable.SL.SearchElement(key)
+	}
+	if foundElement != nil {
+		entry := WalEntryFromBytes(foundElement)
+		return string(entry.Value), entry.Tombstone
 	}
 
-	// value, cacheFound := cache.Get([]byte(key))
-	// if cacheFound {
-	// 	return value
-	// }
+	value, cacheFound := cache.Get([]byte(key))
+	if cacheFound {
+		fmt.Println("Nadjen u cache-u")
+		return string(value.Value()), value.Tombstone()
+	}
 
 	if SearchBloomFilter(key, path) {
 		if path != "" {
@@ -66,14 +77,16 @@ func Search(key string, memtable *Memtable /*cache *LRUCache, */, path string) s
 				offset, found = SearchIndex(key, path, offset)
 
 				if found {
-					value := GetValueFromDataFile(path, offset)
-					return value
+					value, tombstone := GetValueFromDataFile(path, offset)
+					cacheInput := &CacheEntry{key: []byte(key), value: []byte(value), timestamp: time.Now().UnixMicro(), tombstone: tombstone}
+					cache.Put(cacheInput)
+					return value, tombstone
 				}
 			}
 		}
 	}
 
-	return "Not found"
+	return "Not found", 0
 }
 
 func SearchBloomFilter(key string, path string) bool {
@@ -128,14 +141,14 @@ func SearchIndex(key string, path string, offset uint32) (uint32, bool) {
 
 }
 
-func GetValueFromDataFile(path string, offset uint32) string {
+func GetValueFromDataFile(path string, offset uint32) (string, byte) {
 	dataFile, err := os.Open(path + "data.bin")
 	if err != nil {
 		panic(err)
 	}
 	defer dataFile.Close()
 	dataFile.Seek(int64(offset), 0)
-	dataEntry := ReadWalEntry(dataFile)
-	return string(dataEntry.Value)
+	dataEntry, _ := ReadWalEntry(dataFile)
+	return string(dataEntry.Value), dataEntry.Tombstone
 
 }

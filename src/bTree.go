@@ -3,6 +3,8 @@ package src
 import (
 	"fmt"
 	"strconv"
+
+	"github.com/andro02/napredni/config"
 )
 
 type BTree struct {
@@ -14,7 +16,7 @@ func NewBTree() *BTree {
 
 	bTree := BTree{
 		Root:  NewBTreeNode(true),
-		Limit: 3,
+		Limit: config.BTREE_LIMIT,
 	}
 	return &bTree
 
@@ -127,6 +129,13 @@ func (bTree *BTree) PrintTree(x *BTreeNode, l int) {
 		}
 	}
 
+}
+
+func (bTree *BTree) Update(key string, value []byte) {
+	node, i := bTree.SearchKeyRecursive(key, bTree.Root)
+	if i != -1 {
+		node.Data[i].Value = value
+	}
 }
 
 func (bTree *BTree) SearchKey(key string) ([]byte, int) {

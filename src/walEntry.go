@@ -3,6 +3,7 @@ package src
 import (
 	"encoding/binary"
 	"hash/crc32"
+	"io"
 	"os"
 	"time"
 )
@@ -30,12 +31,12 @@ type WalEntry struct {
 	Value     []byte
 }
 
-func NewWalEntry() *WalEntry {
+func NewWalEntry(tombstone byte) *WalEntry {
 
 	walEntry := WalEntry{
 		Crc:       0,
 		Timestamp: uint64(time.Now().Unix()),
-		Tombstone: 0,
+		Tombstone: tombstone,
 		KeySize:   0,
 		ValueSize: 0,
 		Key:       nil,
@@ -105,7 +106,7 @@ func (walEntry *WalEntry) ToBytes() []byte {
 
 func WalEntryFromBytes(bytes []byte) *WalEntry {
 
-	walEntry := NewWalEntry()
+	walEntry := NewWalEntry(0)
 	walEntry.Crc = binary.LittleEndian.Uint32(bytes[:4])
 	walEntry.Timestamp = binary.LittleEndian.Uint64(bytes[4:12])
 	walEntry.Tombstone = bytes[12]
@@ -117,59 +118,65 @@ func WalEntryFromBytes(bytes []byte) *WalEntry {
 
 }
 
-func ReadWalEntry(file *os.File) *WalEntry {
+func ReadWalEntry(file *os.File) (*WalEntry, error) {
 
-	walEntry := NewWalEntry()
+	walEntry := NewWalEntry(0)
 
 	crc := make([]byte, 4)
 	_, err := file.Read(crc)
-	if err != nil {
-		panic(err)
+	if err == io.EOF {
+		return nil, err
 	}
 	walEntry.Crc = binary.LittleEndian.Uint32(crc)
 
 	timestamp := make([]byte, 8)
 	_, err = file.Read(timestamp)
-	if err != nil {
-		panic(err)
+	if err == io.EOF {
+		return nil, err
 	}
 	walEntry.Timestamp = binary.LittleEndian.Uint64(timestamp)
 
 	tombstone := make([]byte, 1)
 	_, err = file.Read(tombstone)
-	if err != nil {
-		panic(err)
+	if err == io.EOF {
+		return nil, err
 	}
-	walEntry.Tombstone = timestamp[0]
+	walEntry.Tombstone = tombstone[0]
 
 	keySize := make([]byte, 8)
 	_, err = file.Read(keySize)
-	if err != nil {
-		panic(err)
+	if err == io.EOF {
+		return nil, err
 	}
 	walEntry.KeySize = binary.LittleEndian.Uint64(keySize)
 
 	valueSize := make([]byte, 8)
 	_, err = file.Read(valueSize)
-	if err != nil {
-		panic(err)
+	if err == io.EOF {
+		return nil, err
 	}
 	walEntry.ValueSize = binary.LittleEndian.Uint64(valueSize)
 
 	key := make([]byte, walEntry.KeySize)
 	_, err = file.Read(key)
-	if err != nil {
-		panic(err)
+	if err == io.EOF {
+		return nil, err
 	}
 	walEntry.Key = key
 
 	value := make([]byte, walEntry.ValueSize)
 	_, err = file.Read(value)
-	if err != nil {
-		panic(err)
+	if err == io.EOF {
+		return nil, err
 	}
 	walEntry.Value = value
 
-	return walEntry
+	return walEntry, nil
 
+}
+
+func (walEntry *WalEntry) Validate() bool {
+	currentCrc := walEntry.Crc
+	walEntry.Crc = 0
+	return currentCrc == CRC32(walEntry.ToBytes())
 }
