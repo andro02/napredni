@@ -3,6 +3,8 @@ package src
 import (
 	"fmt"
 	"strconv"
+
+	"github.com/andro02/napredni/config"
 )
 
 type BTree struct {
@@ -14,7 +16,7 @@ func NewBTree() *BTree {
 
 	bTree := BTree{
 		Root:  NewBTreeNode(true),
-		Limit: 3,
+		Limit: config.BTREE_LIMIT,
 	}
 	return &bTree
 

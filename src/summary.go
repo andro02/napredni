@@ -3,6 +3,8 @@ package src
 import (
 	"encoding/binary"
 	"os"
+
+	"github.com/andro02/napredni/config"
 )
 
 func CreateSummary(indexFile *os.File, filepath string, indexSize uint32) {
@@ -20,7 +22,7 @@ func CreateSummary(indexFile *os.File, filepath string, indexSize uint32) {
 	for offset != indexSize {
 		indexEntry, indexEntrySize := ReadIndexRow(indexFile)
 
-		if i%4 == 0 || offset+indexEntrySize == indexSize {
+		if int(i)%config.SSTABLE_SEGMENT_SIZE == 0 || offset+indexEntrySize == indexSize {
 			summaryEntries = append(summaryEntries, indexEntry)
 			summaryEntries[len(summaryEntries)-1].Offset = offset
 		}

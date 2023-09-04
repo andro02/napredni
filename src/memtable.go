@@ -6,6 +6,8 @@ import (
 	"os"
 	"strconv"
 	"time"
+
+	"github.com/andro02/napredni/config"
 )
 
 type Memtable struct {
@@ -17,10 +19,15 @@ type Memtable struct {
 
 func NewMT() *Memtable {
 	memtable := Memtable{
-		Threshhold: 700,
+		Threshhold: uint32(config.MEMTABLE_THRESHOLD),
 		Size:       0,
-		BT:         NewBTree(),
-		//SL:         NewSkipList(3),
+		BT:         nil,
+		SL:         nil,
+	}
+	if config.MEMTABLE_STRUCTURE == 0 {
+		memtable.BT = NewBTree()
+	} else {
+		memtable.SL = NewSkipList(config.SKIPLIST_SIZE)
 	}
 	return &memtable
 }
@@ -29,21 +36,38 @@ func (memtable *Memtable) Set(key string, value []byte) {
 	newEntrySize := uint32(binary.Size([]byte(key))) + uint32(len(value))
 	if memtable.Size+newEntrySize >= memtable.Threshhold {
 		memtable.flush()
-		memtable.BT = NewBTree()
+		if config.MEMTABLE_STRUCTURE == 0 {
+			memtable.BT = NewBTree()
+		} else {
+			memtable.SL = NewSkipList(config.SKIPLIST_SIZE)
+		}
 		memtable.Size = 0
 	}
-	memtable.BT.Insert(key, value)
+	if config.MEMTABLE_STRUCTURE == 0 {
+		memtable.BT.Insert(key, value)
+	} else {
+		memtable.SL.InsertElement(key, value)
+	}
 	memtable.Size += newEntrySize
 
 }
 
 func (memtable *Memtable) Delete(key string, value []byte) {
-	found, _ := memtable.BT.SearchKey(key)
-	if found != nil {
+	var found []byte
+	if config.MEMTABLE_STRUCTURE == 0 {
+		found, _ = memtable.BT.SearchKey(key)
+	} else {
+		found = memtable.SL.SearchElement(key)
+	}
+	if found == nil {
 		memtable.Set(key, value)
 		return
 	}
-	memtable.BT.Update(key, value)
+	if config.MEMTABLE_STRUCTURE == 0 {
+		memtable.BT.Update(key, value)
+	} else {
+		memtable.SL.UpdateElement(key, value)
+	}
 
 }
 
@@ -60,7 +84,15 @@ func (memtable *Memtable) flush() {
 		panic(err)
 	}
 
-	elements := memtable.BT.GetAllElements()
+	elements := make([]*KeyValuePair, 0)
+	if config.MEMTABLE_STRUCTURE == 0 {
+		elements = memtable.BT.GetAllElements()
+	} else {
+		entries := memtable.SL.GetAll()
+		for _, entry := range entries {
+			elements = append(elements, NewKeyValuePair(entry.key, entry.value))
+		}
+	}
 
 	var dataSize uint32 = 0
 	var indexSize uint32 = 0

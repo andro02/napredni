@@ -124,7 +124,7 @@ func test(wal *src.Wal, memtable *src.Memtable, cache *src.LRUCache) {
 			value[i] = letters[rand.Intn(len(letters))]
 		}
 
-		tokens[0] = "PUT"
+		tokens[0] = "DELETE"
 		tokens[1] = string(key)
 		tokens[2] = string(value)
 
@@ -133,7 +133,7 @@ func test(wal *src.Wal, memtable *src.Memtable, cache *src.LRUCache) {
 		tombstones = append(tombstones, 0)
 
 		//fmt.Println(tokens[1], " ", tokens[2])
-		src.Put(wal, memtable, tokens)
+		src.Delete(wal, memtable, tokens)
 
 	}
 

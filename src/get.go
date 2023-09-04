@@ -7,6 +7,8 @@ import (
 	"path/filepath"
 	"strings"
 	"time"
+
+	"github.com/andro02/napredni/config"
 )
 
 func Get(memtable *Memtable, cache *LRUCache, tokens []string) (string, byte) {
@@ -49,9 +51,15 @@ func Get(memtable *Memtable, cache *LRUCache, tokens []string) (string, byte) {
 
 func Search(key string, memtable *Memtable, cache *LRUCache, path string) (string, byte) {
 
-	foundELement, _ := memtable.BT.SearchKey(key)
-	if foundELement != nil {
-		entry := WalEntryFromBytes(foundELement)
+	var foundElement []byte
+	if config.MEMTABLE_STRUCTURE == 0 {
+		foundElement, _ = memtable.BT.SearchKey(key)
+
+	} else {
+		foundElement = memtable.SL.SearchElement(key)
+	}
+	if foundElement != nil {
+		entry := WalEntryFromBytes(foundElement)
 		return string(entry.Value), entry.Tombstone
 	}
 
@@ -140,7 +148,7 @@ func GetValueFromDataFile(path string, offset uint32) (string, byte) {
 	}
 	defer dataFile.Close()
 	dataFile.Seek(int64(offset), 0)
-	dataEntry := ReadWalEntry(dataFile)
+	dataEntry, _ := ReadWalEntry(dataFile)
 	return string(dataEntry.Value), dataEntry.Tombstone
 
 }
