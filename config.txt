@@ -12,3 +12,5 @@ bfExpectedElements=1000
 bfFalsePositiveRate=1
 bTreeLimit=5
 skipListSize=5
+tokenBucketMaxTokens=10
+tokenBucketRefill=1

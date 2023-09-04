@@ -22,6 +22,8 @@ var BF_EXPECTED_ELEMENTS = 50
 var BF_FALSE_POSITIVE_RATE = 0.02
 var BTREE_LIMIT = 3
 var SKIPLIST_SIZE = 3
+var TOKEN_BUCKET_MAX_TOKENS = 10
+var TOKEN_BUCKET_REFILL = 1
 
 func ReadConfig(filename string) (map[string]int, error) {
 	config := make(map[string]int)
@@ -68,5 +70,7 @@ func LoadValues(data map[string]int) {
 	BTREE_LIMIT = data["bTreeLimit"]
 	SKIPLIST_SIZE = data["skipListSize"]
 	MEMTABLE_SINGLE_FILE = data["memtableSingleFile"]
+	TOKEN_BUCKET_MAX_TOKENS = data["tokenBucketMaxTokens"]
+	TOKEN_BUCKET_REFILL = data["tokenBucketRefill"]
 
 }

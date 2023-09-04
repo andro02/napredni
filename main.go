@@ -14,20 +14,19 @@ import (
 )
 
 func main() {
-	tb := src.CreateTokenBucket(10, 1)
-
-
 	cfg, err := config.ReadConfig("config.txt")
 	if err != nil {
 		panic(err)
 	}
 	config.LoadValues(cfg)
+
+	tb := src.CreateTokenBucket(float64(config.TOKEN_BUCKET_MAX_TOKENS), float64(config.TOKEN_BUCKET_REFILL))
 	wal := src.NewWal()
 	memtable := src.NewMT()
 	cache := src.Init()
 
-	test(wal, memtable, cache)
-	return
+	//test(wal, memtable, cache)
+	//return
 	// path := "sstable//1693756325_"
 	// file, _ := os.Open(path + "data.bin")
 	// for {
@@ -43,9 +42,6 @@ func main() {
 
 	for {
 		fmt.Print(">>> ")
-		if tb.Request(1) != false {
-			continue
-		}
 		input, err := reader.ReadString('\n')
 		input = strings.TrimRight(input, "\r\n")
 
@@ -64,6 +60,11 @@ func main() {
 
 		if !found {
 			fmt.Println("Invalid command. Please try again.")
+			continue
+		}
+
+		if !tb.Request(5) {
+			fmt.Println("Too many requests.")
 			continue
 		}
 
