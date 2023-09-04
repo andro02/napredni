@@ -24,8 +24,8 @@ func NewCountMinSketch(key [16]byte, epsilon float64, delta float64) (*CountMinS
 		return nil, fmt.Errorf("countminsketch error: values of epsilon and delta should both be greater than 0")
 	}
 
-	k := CalculateK(delta)
-	m := CalculateM(epsilon)
+	k := CalculateRows(delta)
+	m := CalculateCols(epsilon)
 
 	hashFunctions, seeds := GenerateHashFunctions(k)
 	cms := &CountMinSketch{
@@ -53,118 +53,116 @@ func NewCountMinSketch(key [16]byte, epsilon float64, delta float64) (*CountMinS
 // }
 
 func CMSMenu() {
-    for {
-        fmt.Println("\n1. Kreiranje novog CMS")
-        fmt.Println("2. Dodavanje elementa u CMS")
-        fmt.Println("3. Provjera elementa u CMS")
-        fmt.Println("0. Izlaz")
-        fmt.Println("Opcija:")
-        var choice int
-        n, err := fmt.Scanf("%d\n", &choice)
-        if n != 1 || err != nil {
-            continue
-        }
+	for {
+		fmt.Println("\n1. Kreiranje novog CMS")
+		fmt.Println("2. Dodavanje elementa u CMS")
+		fmt.Println("3. Provjera elementa u CMS")
+		fmt.Println("0. Izlaz")
+		fmt.Println("Opcija:")
+		var choice int
+		n, err := fmt.Scanf("%d\n", &choice)
+		if n != 1 || err != nil {
+			continue
+		}
 
-        switch choice {
-        case 0:
-            fmt.Println("Izlaz iz CMS menija...")
-            return
-        case 1:
-            CreateCMS()
-        case 2:
-            AddToCMS()
-        case 3:
-            CheckCMS()
-        default:
-            fmt.Println("Neispravan unos. Pokusajte ponovo")
-        }
-    }
+		switch choice {
+		case 0:
+			fmt.Println("Izlaz iz CMS menija...")
+			return
+		case 1:
+			CreateCMS()
+		case 2:
+			AddToCMS()
+		case 3:
+			CheckCMS()
+		default:
+			fmt.Println("Neispravan unos. Pokusajte ponovo")
+		}
+	}
 }
 
 func CreateCMS() {
-    var input string
-    fmt.Println("Unesite kljuc za CMS: ")
-    fmt.Scanf("%s\n", &input)
+	var input string
+	fmt.Println("Unesite kljuc za CMS: ")
+	fmt.Scanf("%s\n", &input)
 
-    key := ConvertToKey(input)
+	key := ConvertToKey(input)
 
-    cms, _ := NewCountMinSketch(key, 0.1, 0.9)
-    found, _ := cms.KeyCheck()
-    if found {
-        fmt.Println("Već postoji CMS sa tim ključem.")
-    } else {
-        // Upisivanje u datoteku		
-        if err := cms.Serialize(); err == nil {
-            fmt.Println("Uspesno ste kreirali CMS.")
-        } else {
-            fmt.Print(err)
-        }
-    }
+	cms, _ := NewCountMinSketch(key, 0.1, 0.9)
+	found, _ := cms.KeyCheck()
+	if found {
+		fmt.Println("Već postoji CMS sa tim ključem.")
+	} else {
+		// Upisivanje u datoteku
+		if err := cms.Serialize(); err == nil {
+			fmt.Println("Uspesno ste kreirali CMS.")
+		} else {
+			fmt.Print(err)
+		}
+	}
 }
 
 func AddToCMS() {
-    // Unos i konverzija ključa
-    var input string
-    fmt.Println("Unesite kljuc CMSa: ")
-    fmt.Scanf("%s\n", &input)
+	// Unos i konverzija ključa
+	var input string
+	fmt.Println("Unesite kljuc CMSa: ")
+	fmt.Scanf("%s\n", &input)
 
-    key := ConvertToKey(input)
+	key := ConvertToKey(input)
 
-    c := CountMinSketch{key: key}
-    ok, pos := c.KeyCheck()
-    if !ok {
-        fmt.Println("Ne postoji CMS sa ovim ključem.")
-    } else {
-        var val string
-        fmt.Println("Unesite vrednost koju zelite da ubacite u CMS: ")
-        fmt.Scanf("%s\n", &val)
-        if c.AddToSketch([]byte(val), pos) {
-            fmt.Print("Uspjesno ste dodali vrijednost u CMS.")
-        } else {
-            fmt.Println("Doslo je do greske. Pokusajte ponovo.")
-        }
-    }
+	c := CountMinSketch{key: key}
+	ok, pos := c.KeyCheck()
+	if !ok {
+		fmt.Println("Ne postoji CMS sa ovim ključem.")
+	} else {
+		var val string
+		fmt.Println("Unesite vrednost koju zelite da ubacite u CMS: ")
+		fmt.Scanf("%s\n", &val)
+		if c.AddToSketch([]byte(val), pos) {
+			fmt.Print("Uspjesno ste dodali vrijednost u CMS.")
+		} else {
+			fmt.Println("Doslo je do greske. Pokusajte ponovo.")
+		}
+	}
 }
 
 func CheckCMS() {
-    // Unos i konverzija ključa
-    var input string
-    fmt.Println("Unesite kljuc CMSa: ")
-    fmt.Scanf("%s\n", &input)
+	// Unos i konverzija ključa
+	var input string
+	fmt.Println("Unesite kljuc CMSa: ")
+	fmt.Scanf("%s\n", &input)
 
-    key := ConvertToKey(input)
+	key := ConvertToKey(input)
 
-    c := CountMinSketch{key: key}
-    ok, _ := c.KeyCheck()
-    if !ok {
-        fmt.Println("Ne postoji CMS sa ovim ključem.")
-    } else {
-        var val string
-        fmt.Println("Unesite vrednost koju zelite da proverite: ")
-        fmt.Scanln(&val)
-        fmt.Println("Pojavljuje se:", c.GetMinFrequency([]byte(val)), "puta.")
-    }
+	c := CountMinSketch{key: key}
+	ok, _ := c.KeyCheck()
+	if !ok {
+		fmt.Println("Ne postoji CMS sa ovim ključem.")
+	} else {
+		var val string
+		fmt.Println("Unesite vrednost koju zelite da proverite: ")
+		fmt.Scanln(&val)
+		fmt.Println("Pojavljuje se:", c.GetMinFrequency([]byte(val)), "puta.")
+	}
 }
 
 func ConvertToKey(input string) [16]byte {
-    max_length := 16
-    if len(input) < max_length {
-        max_length = len(input)
-    }
+	max_length := 16
+	if len(input) < max_length {
+		max_length = len(input)
+	}
 
-    key := [16]byte{}
-    for i := 0; i < max_length; i++ {
-        key[i] = input[i]
-    }
+	key := [16]byte{}
+	for i := 0; i < max_length; i++ {
+		key[i] = input[i]
+	}
 
-    return key
+	return key
 }
-
-
 
 func (cms *CountMinSketch) AddToSketch(data []byte, offset uint64) bool {
 	for i, hashFunc := range cms.hashFunctions {
-		hashedValue := hashFunc.Hash(data)
+		hashedValue := hashFunc.HashAlg(data)
 		tableIndex := hashedValue % uint64(cms.w)
 		cms.frequencyTable[i][tableIndex] += 1
 	}
@@ -172,15 +170,13 @@ func (cms *CountMinSketch) AddToSketch(data []byte, offset uint64) bool {
 	return true
 }
 
-
-
 func (cms *CountMinSketch) Update(offset uint64) bool {
 	file, err := os.OpenFile("cms.bin", os.O_RDWR, 0600)
-	defer file.Close()
 	if err != nil {
 		fmt.Println(err)
 		return false
 	}
+	defer file.Close()
 
 	meta_data, err := file.Stat()
 	if err != nil {
@@ -225,7 +221,7 @@ func (cms *CountMinSketch) GetMinFrequency(data []byte) int32 {
 	frequencyValues := make([]int32, cms.d)
 
 	for i, hashFunc := range cms.hashFunctions {
-		hashedValue := hashFunc.Hash(data)
+		hashedValue := hashFunc.HashAlg(data)
 		tableIndex := hashedValue % uint64(cms.w)
 
 		frequencyValues[i] = cms.frequencyTable[i][tableIndex]
@@ -241,11 +237,11 @@ func (cms *CountMinSketch) GetMinFrequency(data []byte) int32 {
 }
 func (cms *CountMinSketch) KeyCheck() (bool, uint64) {
 	file, err := os.OpenFile("cms.bin", os.O_RDONLY, 0600)
-	defer file.Close()
 	if err != nil {
 		fmt.Println(err)
 		return false, 0
 	}
+	defer file.Close()
 
 	meta_data, err := file.Stat()
 	if err != nil {
@@ -269,14 +265,14 @@ func (cms *CountMinSketch) KeyCheck() (bool, uint64) {
 	for offset < uint64(len(data)) {
 		position := offset
 		copy(current_key[:], data[offset:offset+16])
-		
+
 		cms.FillCMS(data, &offset)
 
 		cms.frequencyTable = make([][]int32, cms.d)
 		for i := 0; i < int(cms.d); i++ {
 			cms.frequencyTable[i] = make([]int32, cms.w)
 		}
-		if bytes.Compare(current_key[:], cms.key[:]) == 0 {
+		if bytes.Equal(current_key[:], cms.key[:]) {
 			// If key is wanted one we load cms
 			cms.FillTableData(data, &offset)
 
@@ -288,7 +284,7 @@ func (cms *CountMinSketch) KeyCheck() (bool, uint64) {
 	return false, 0
 }
 
-func (cms *CountMinSketch) FillTableData(data []byte, offset *uint64){
+func (cms *CountMinSketch) FillTableData(data []byte, offset *uint64) {
 	for i := 0; i < int(cms.d); i++ {
 		for j := 0; j < int(cms.w); j++ {
 			cms.frequencyTable[i][j] = int32(binary.BigEndian.Uint32(data[*offset : *offset+4]))
@@ -307,16 +303,15 @@ func (cms *CountMinSketch) FillTableData(data []byte, offset *uint64){
 	}
 
 	cms.hashFunctions = InitializeHashFunctionsFromSeeds(cms.d, cms.seeds)
-} 
-
+}
 
 func (cms *CountMinSketch) Serialize() error {
 	fmt.Println(cms.key)
 	file, err := os.OpenFile("cms.bin", os.O_WRONLY|os.O_APPEND, 0600)
-	defer file.Close()
 	if err != nil {
 		return err
 	}
+	defer file.Close()
 	if err := cms.Write(file); err != nil {
 		return err
 	}
@@ -327,7 +322,6 @@ func (cms *CountMinSketch) Serialize() error {
 
 	return nil
 }
-
 
 func (cms *CountMinSketch) Write(writer io.Writer) error {
 	if err := binary.Write(writer, binary.BigEndian, cms.key); err != nil {

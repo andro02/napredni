@@ -78,20 +78,3 @@ func ReadIndexRow(indexFile *os.File) (*IndexEntry, uint32) {
 	return indexEntry, uint32(len(keySize) + len(key) + len(offset))
 
 }
-
-// func (indexEntry *IndexEntry) Write(file *os.File) {
-
-// 	// time := strconv.FormatInt(time.Now().Unix(), 10)
-// 	// path := "sstable" + string(os.PathSeparator) + time + "_" + "data.bin"
-// 	// dataFile, err := os.Create(path)
-// 	// if err != nil {
-// 	// 	log.Fatal(err)
-// 	// }
-// 	// dataFile.Close()
-
-// 	_, err := file.Write(indexEntry.ToBytes())
-// 	if err != nil {
-// 		log.Fatal(err)
-// 	}
-
-// }

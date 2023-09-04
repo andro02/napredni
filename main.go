@@ -4,17 +4,38 @@ import (
 	"bufio"
 	"fmt"
 	"log"
+	"math/rand"
 	"os"
 	"strings"
+	"time"
 
+	"github.com/andro02/napredni/config"
 	"github.com/andro02/napredni/src"
 )
 
 func main() {
 	tb := src.CreateTokenBucket(10, 1)
 
+
+	cfg, err := config.ReadConfig("config.txt")
+	if err != nil {
+		panic(err)
+	}
+	config.LoadValues(cfg)
 	wal := src.NewWal()
 	memtable := src.NewMT()
+	cache := src.Init()
+
+	test(wal, memtable, cache)
+	return
+	// path := "sstable//1693756325_"
+	// file, _ := os.Open(path + "data.bin")
+	// for {
+	// 	fmt.Println(src.ReadWalEntry(file))
+	// }
+	// src.TestIndex(path)
+	// src.TestSummary(path)
+	//return
 
 	reader := bufio.NewReader(os.Stdin)
 	var commands = [7]string{"PUT", "GET", "DELETE", "LIST", "RANGESCAN", "CMS", "HLL"}
@@ -46,22 +67,20 @@ func main() {
 			continue
 		}
 
-		fmt.Println(tokens[0])
-
 		switch tokens[0] {
 
 		case commands[0]:
 			{
-				fmt.Println("PUT code")
 				src.Put(wal, memtable, tokens)
 			}
 		case commands[1]:
 			{
-				fmt.Println("GET code")
+				value, tombstone := src.Get(memtable, cache, tokens)
+				fmt.Println(value, tombstone)
 			}
 		case commands[2]:
 			{
-				fmt.Println("DELETE code")
+				src.Delete(wal, memtable, tokens)
 			}
 		case commands[3]:
 			{
@@ -84,4 +103,59 @@ func main() {
 
 		}
 	}
+}
+
+func test(wal *src.Wal, memtable *src.Memtable, cache *src.LRUCache) {
+
+	size := 30
+
+	rand.New(rand.NewSource(time.Now().UnixNano()))
+
+	var letters = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_")
+
+	keys := make([]string, 0)
+	values := make([]string, 0)
+	tombstones := make([]byte, 0)
+
+	for i := 0; i < size; i++ {
+
+		tokens := make([]string, 3)
+		key := make([]rune, rand.Intn(20)+1)
+		for i := range key {
+			key[i] = letters[rand.Intn(len(letters))]
+		}
+
+		value := make([]rune, rand.Intn(20)+1)
+		for i := range value {
+			value[i] = letters[rand.Intn(len(letters))]
+		}
+
+		tokens[0] = "DELETE"
+		tokens[1] = string(key)
+		tokens[2] = string(value)
+
+		keys = append(keys, string(key))
+		values = append(values, string(value))
+		tombstones = append(tombstones, 0)
+
+		//fmt.Println(tokens[1], " ", tokens[2])
+		src.Delete(wal, memtable, tokens)
+
+	}
+
+	for i := 0; i < size; i++ {
+
+		tokens := make([]string, 2)
+
+		tokens[0] = "GET"
+		tokens[1] = keys[i]
+
+		value, tombstone := src.Get(memtable, cache, tokens)
+		if value != values[i] {
+			fmt.Println("Error: ", keys[i], " ", value, tombstone, " ", values[i], tombstones[i])
+		} else {
+			fmt.Println("Success: ", keys[i], " ", value, tombstone, " ", values[i], tombstones[i])
+		}
+	}
+
 }
